@@ -46,15 +46,15 @@ RUN python3.10 -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
 # Install Python dependencies, setuptools-rust, PyTorch, and download WhisperX
+# Установка совместимых версий PyTorch и pyannote.audio
 RUN pip install --no-cache-dir --upgrade pip==21.* && \
     pip install \
         setuptools-rust==1.8.0 \
         huggingface_hub==0.18.0 \
-        runpod==1.3.0 \
-        torch==2.0.0 \
-        torchvision==0.15.0 \
-        torchaudio==2.0.0 \
-        -f https://download.pytorch.org/whl/cu118/torch_stable.html
+        runpod==1.3.0 && \
+    pip install torch==1.10.0+cu113 torchaudio==0.10.0 \
+        -f https://download.pytorch.org/whl/cu113/torch_stable.html && \
+    pip install pyannote.audio==0.0.1
 
 # Clone and install WhisperX
 RUN pip install --no-cache-dir git+https://github.com/m-bain/whisperx.git
