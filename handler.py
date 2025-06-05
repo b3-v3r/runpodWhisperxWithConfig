@@ -71,7 +71,7 @@ def handler(event):
 
     try:
         # 1. Transcribe with original whisper (batched)
-        model = whisperx.load_model("small", device, compute_type=compute_type, language=language_code)
+        model = whisperx.load_model("medium", device, compute_type=compute_type, language=language_code)
         # Load the audio
         audio = whisperx.load_audio(audio_input)
         # Transcribe the audio
