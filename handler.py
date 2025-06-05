@@ -11,7 +11,7 @@ import requests
 device = os.environ.get('DEVICE', 'cuda') # cpu if on Mac
 compute_type = os.environ.get('COMPUTE_TYPE', 'float16') #int8 if on Mac
 batch_size = 16 # reduce if low on GPU mem
-language_code = "en"
+language_code = os.environ.get('LANGUAGE_CODE', 'ru')
 
 def base64_to_tempfile(base64_data):
     """
@@ -71,7 +71,7 @@ def handler(event):
 
     try:
         # 1. Transcribe with original whisper (batched)
-        model = whisperx.load_model("small", device, compute_type=compute_type, language="en")
+        model = whisperx.load_model("small", device, compute_type=compute_type, language=language_code)
         # Load the audio
         audio = whisperx.load_audio(audio_input)
         # Transcribe the audio
