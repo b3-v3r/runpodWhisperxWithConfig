@@ -2,91 +2,64 @@ import runpod
 import os
 import time
 import whisperx
-import gc 
+import gc
 import base64
-import tempfile
 import requests
+import io
 
-# CHECK THE ENV VARIABLES FOR DEVICE AND COMPUTE TYPE
-device = os.environ.get('DEVICE', 'cuda') # cpu if on Mac
-compute_type = os.environ.get('COMPUTE_TYPE', 'float16') #int8 if on Mac
-batch_size = 16 # reduce if low on GPU mem
+# ENV variables
+device = os.environ.get('DEVICE', 'cuda')  # or 'cpu'
+compute_type = os.environ.get('COMPUTE_TYPE', 'float16')  # or 'int8'
+batch_size = 16
 language_code = os.environ.get('LANGUAGE_CODE', 'ru')
 
-def base64_to_tempfile(base64_data):
-    """
-    Decode base64 data and write it to a temporary file.
-    Returns the path to the temporary file.
-    """
-    # Decode the base64 data to bytes
-    audio_data = base64.b64decode(base64_data)
+def decode_base64_audio(b64_data: str) -> bytes:
+    """Декодирует base64 строку в байты."""
+    return base64.b64decode(b64_data)
 
-    # Create a temporary file and write the decoded data
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-    with open(temp_file.name, 'wb') as file:
-        file.write(audio_data)
-
-    return temp_file.name
-
-def download_file(url):
-    """
-    Download a file from a URL to a temporary file and return its path.
-    """
+def download_audio_bytes(url: str) -> bytes:
+    """Скачивает аудио по URL и возвращает байты."""
     response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception("Failed to download file from URL")
-
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-    temp_file.write(response.content)
-    temp_file.close()
-    return temp_file.name
+    response.raise_for_status()
+    return response.content
 
 def handler(event):
-    """
-    Run inference on the model.
-
-    Args:
-        event (dict): The input event containing the audio data.
-            The event should have the following structure:
-            {
-                "input": {
-                    "audio_base_64": str,  # Base64-encoded audio data (optional)
-                    "audio_url": str       # URL of the audio file (optional)
-                }
-            }
-            Either "audio_base_64" or "audio_url" must be provided.
-    """
-    job_input = event['input']
-    job_input_audio_base_64 = job_input.get('audio_base_64')
-    job_input_audio_url = job_input.get('audio_url')
-
-    if job_input_audio_base_64:
-        # If there is base64 data
-        audio_input = base64_to_tempfile(job_input_audio_base_64)
-    elif job_input_audio_url and job_input_audio_url.startswith('http'):
-        # If there is an URL
-        audio_input = download_file(job_input_audio_url)
-    else:
-        return "No audio input provided"
+    job_input = event.get('input', {})
+    audio_b64 = job_input.get('audio_base_64')
+    audio_url = job_input.get('audio_url')
 
     try:
-        # 1. Transcribe with original whisper (batched)
+        # Получаем байты аудио
+        if audio_b64:
+            audio_bytes = decode_base64_audio(audio_b64)
+        elif audio_url and audio_url.startswith('http'):
+            audio_bytes = download_audio_bytes(audio_url)
+        else:
+            return {"error": "No audio input provided."}
+
+        # Загружаем байты в память как файл
+        audio_file_obj = io.BytesIO(audio_bytes)
+
+        # Загружаем модель
         model = whisperx.load_model("medium", device, compute_type=compute_type, language=language_code)
-        # Load the audio
-        audio = whisperx.load_audio(audio_input)
-        # Transcribe the audio
+        audio = whisperx.load_audio(audio_file_obj)
+
+        # Транскрипция
         result = model.transcribe(audio, batch_size=batch_size, language=language_code, print_progress=True)
 
-        # 2. Align whisper output
+        # Выравнивание
         model_a, metadata = whisperx.load_align_model(language_code=language_code, device=device)
         result = whisperx.align(result["segments"], model_a, metadata, audio, device)
-        print(result["segments"])
 
-        # after alignment
         return result
-    except:
-        return "Error transcribing audio"
 
+    except Exception as e:
+        return {
+            "error": str(e),
+            "trace": repr(e)
+        }
+
+# Запуск RunPod handler
 runpod.serverless.start({
     "handler": handler
 })
