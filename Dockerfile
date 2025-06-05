@@ -41,12 +41,13 @@ RUN python -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
 # Установка зависимостей + совместимые версии PyTorch/pyannote
-RUN pip install --no-cache-dir --upgrade pip && \
+# Установка старого pip/setuptools/wheel + совместимых версий
+RUN pip install --no-cache-dir --upgrade pip==21.3.1 setuptools==58.0.4 wheel==0.37.1 && \
     pip install \
         setuptools-rust==1.8.0 \
         huggingface_hub==0.18.0 \
         runpod==1.3.0 && \
-    pip install torch==1.10.0+cu113 torchaudio==0.10.0 \
+    pip install torch==1.10.0+cu113+linux_x86_64 torchaudio==0.10.0+cu113 \
         -f https://download.pytorch.org/whl/cu113/torch_stable.html && \
     pip install pyannote.audio==0.0.1
 
