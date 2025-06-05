@@ -57,8 +57,7 @@ RUN pip install --no-cache-dir --upgrade pip==21.* && \
         -f https://download.pytorch.org/whl/cu118/torch_stable.html
 
 # Clone and install WhisperX
-COPY ./whisperx /code
-RUN pip install --no-cache-dir /code
+RUN pip install --no-cache-dir git+https://github.com/m-bain/whisperx.git
 
 # Preload Models
 RUN python -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");' && \
