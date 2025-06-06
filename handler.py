@@ -5,7 +5,7 @@ import gc
 import base64
 import requests
 import tempfile
-
+import traceback
 # ENV variables
 device = os.environ.get('DEVICE', 'cuda')
 compute_type = os.environ.get('COMPUTE_TYPE', 'float16')
@@ -55,6 +55,8 @@ def handler(event):
         return result
 
     except Exception as e:
+        print(f"Error: {e}")
+        print(traceback.format_exc())
         return {
             "error": str(e),
             "trace": repr(e)
