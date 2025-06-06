@@ -51,6 +51,9 @@ RUN pip install --no-cache-dir --upgrade pip==21.3.1 setuptools==58.0.4 wheel==0
         -f https://download.pytorch.org/whl/cu113/torch_stable.html && \
     pip install pyannote.audio==0.0.1
 
+RUN apt-get install -y ffmpeg libsndfile1
+RUN pip install ffmpeg-python soundfile
+
 # Установка WhisperX
 RUN pip install --no-cache-dir git+https://github.com/m-bain/whisperx.git
 
