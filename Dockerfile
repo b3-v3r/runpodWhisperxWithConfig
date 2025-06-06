@@ -53,6 +53,7 @@ RUN pip install --no-cache-dir --upgrade pip==21.3.1 setuptools==58.0.4 wheel==0
 
 RUN apt-get install -y ffmpeg libsndfile1
 RUN pip install ffmpeg-python soundfile
+RUN pip install lightning_fabric==1.5.1
 
 # Установка WhisperX
 RUN pip install --no-cache-dir git+https://github.com/m-bain/whisperx.git
