@@ -4,10 +4,7 @@ import whisperx
 import gc
 import base64
 import requests
-import io
-import ffmpeg
-import numpy as np
-import soundfile as sf
+import tempfile
 
 # ENV variables
 device = os.environ.get('DEVICE', 'cuda')
@@ -23,27 +20,15 @@ def download_audio_bytes(url: str) -> bytes:
     response.raise_for_status()
     return response.content
 
-def convert_audio_to_wav_bytes(audio_bytes: bytes) -> np.ndarray:
-    """Конвертация mp3/webm/... байтов в wav 16kHz float32 numpy."""
-    in_mem = io.BytesIO(audio_bytes)
-    out_mem = io.BytesIO()
-
-    (
-        ffmpeg
-        .input('pipe:0')
-        .output('pipe:1', format='wav', acodec='pcm_s16le', ac=1, ar='16000')
-        .run(input=in_mem.read(), stdout=out_mem, stderr=ffmpeg.PIPE, overwrite_output=True)
-    )
-    out_mem.seek(0)
-    audio_np, _ = sf.read(out_mem, dtype='float32')
-    return audio_np
-
 def handler(event):
     job_input = event.get('input', {})
     audio_b64 = job_input.get('audio_base_64')
     audio_url = job_input.get('audio_url')
 
+    tmp_path = None
+
     try:
+        # Получаем байты аудио
         if audio_b64:
             audio_bytes = decode_base64_audio(audio_b64)
         elif audio_url and audio_url.startswith('http'):
@@ -51,16 +36,21 @@ def handler(event):
         else:
             return {"error": "No audio input provided."}
 
-        # Конвертация в WAV in-memory и загрузка в numpy
-        audio_np = convert_audio_to_wav_bytes(audio_bytes)
+        # Сохраняем аудио во временный файл
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            tmp.write(audio_bytes)
+            tmp_path = tmp.name
 
-        # Модель
+        # Загрузка модели и аудио
         model = whisperx.load_model("medium", device, compute_type=compute_type, language=language_code)
-        result = model.transcribe(audio_np, batch_size=batch_size, language=language_code)
+        audio = whisperx.load_audio(tmp_path)
+
+        # Транскрипция
+        result = model.transcribe(audio, batch_size=batch_size, language=language_code)
 
         # Выравнивание
         model_a, metadata = whisperx.load_align_model(language_code=language_code, device=device)
-        result = whisperx.align(result["segments"], model_a, metadata, audio_np, device)
+        result = whisperx.align(result["segments"], model_a, metadata, audio, device)
 
         return result
 
@@ -71,6 +61,8 @@ def handler(event):
         }
 
     finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
         gc.collect()
 
 runpod.serverless.start({
