@@ -1,10 +1,23 @@
-import runpod
-import os
-import base64
-import tempfile
-import whisper
-from pyannote.audio import Pipeline
-from pyannote_whisper.utils import diarize_text
+import traceback
+import sys
+
+try:
+    import runpod
+    import os
+    import base64
+    import tempfile
+    import whisper
+    from pyannote.audio import Pipeline
+    from pyannote_whisper.utils import diarize_text
+
+except Exception as e:
+    print("🔥 IMPORT ERROR:", e)
+    traceback.print_exc()
+    import time
+    time.sleep(600)  # даём 10 минут на отладку через терминал
+    sys.exit(1)
+
+
 
 def base64_to_tempfile(base64_data):
     audio_data = base64.b64decode(base64_data)
