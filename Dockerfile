@@ -5,11 +5,20 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and Python 3.10
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    python3.10 python3.10-venv python3.10-distutils \
-    ffmpeg git curl ca-certificates && \
+        software-properties-common \
+        ffmpeg \
+        git \
+        curl \
+        ca-certificates && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3.10 \
+        python3.10-venv \
+        python3.10-distutils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create and activate virtual environment
