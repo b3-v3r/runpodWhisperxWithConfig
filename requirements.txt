@@ -1,5 +1,8 @@
 pyannote-whisper @ git+https://github.com/yinruiqing/pyannote-whisper.git
+pyannote.audio==2.1.1
+torch==1.13.1
+torchaudio==0.13.1
 ffmpeg-python
 openai-whisper
-pyannote.audio
-runpod==1.3.0 
+numpy<2.0
+runpod==1.3.0
