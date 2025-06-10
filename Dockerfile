@@ -5,6 +5,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /app
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
 # Install system dependencies and Python 3.10
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
