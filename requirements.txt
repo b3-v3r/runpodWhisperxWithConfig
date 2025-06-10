@@ -1,9 +1,15 @@
-setuptools>=61
-pyannote-whisper @ git+https://github.com/b3-v3r/pyannote-whisper.git
-pyannote.audio==2.1.1
-torch==1.13.1
-torchaudio==0.13.1
+# Обязательно – система соберёт эти зависимости в окружении Python 3.8
+setuptools
+numpy
 ffmpeg-python
 openai-whisper
-numpy<2.0
-runpod==1.3.0
+runpod
+
+# PyTorch и Torchaudio для Python 3.8 + CUDA 11.6/11.7/11.8 (см. --find-links)
+torch
+torchaudio
+--find-links https://download.pytorch.org/whl/cu116
+
+# Аудиодиаризация
+pyannote.whisper @ git+https://github.com/b3-v3r/pyannote-whisper.git@main#egg=pyannote-whisper
+pyannote.audio

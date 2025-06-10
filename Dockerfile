@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
-# Install system dependencies and Python 3.10
+# 1) Устанавливаем системные зависимости и Python 3.8
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         software-properties-common \
@@ -20,25 +20,26 @@ RUN apt-get update && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3.10 \
-        python3.10-venv \
-        python3.10-distutils && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+        python3.8 \
+        python3.8-venv \
+        python3.8-distutils && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Create and activate virtual environment
-RUN python3.10 -m venv /app/venv
+# 2) Создаём и активируем виртуальное окружение на Python 3.8
+RUN python3.8 -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 
-# Upgrade pip and install Python dependencies
+# 3) Апгрейд pip и установка зависимостей из requirements.txt
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy handler and any other needed files
+# 4) Копируем ваш код
 COPY handler.py /app/handler.py
 
-# Set environment variables
+# 5) Флаги для корректного вывода в логи
 ENV PYTHONUNBUFFERED=1
 
-# Default command
+# 6) Запуск
 CMD ["python", "-u", "handler.py"]
