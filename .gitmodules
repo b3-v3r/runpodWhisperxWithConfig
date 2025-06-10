@@ -1,4 +1,0 @@
-[submodule "whisperx"]
-	path = whisperx
-	url = https://github.com/m-bain/whisperX.git
-	branch = main
