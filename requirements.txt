@@ -1,5 +1,5 @@
 setuptools>=61
-pyannote-whisper @ git+https://github.com/yinruiqing/pyannote-whisper.git
+pyannote-whisper @ git+https://github.com/b3-v3r/pyannote-whisper.git
 pyannote.audio==2.1.1
 torch==1.13.1
 torchaudio==0.13.1
